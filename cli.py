@@ -6,7 +6,7 @@ class Token():
         self.x = x
         self.piece = []
 
-    def read_token(self):   #Piece 1 6: ->Pieceと右の:を弾く(Pieceのサイズ)
+    def read_token(self): #Piece 1 6: ->Pieceと右の:を弾く(Pieceのサイズ)
         self.y, self.x = map(int, input()[:-1].split(' ')[1:])
         self.piece = []
         for _ in range(self.y):
@@ -15,7 +15,6 @@ class Token():
 #Piece 2 2:
 #**
 #**
-
     def get_topleft_edge(self): #Pieceの左上か
         for i in range(self.y):
             for l in range(self.x): #yieldを使うことで都度都度returnしてるのと同じでbuffが必要なくなる
@@ -25,7 +24,7 @@ class Token():
     def get_bottomright_edge(self): #Pieceの右下から
         for i in range(self.y)[::-1]:
             for l in range(self.x)[::-1]:
-                if self.piece[i][l] == '*': yield i, l # sharp[y][x]が*だった場合はi,lを返す(その座標)
+                if self.piece[i][l] == '*': yield i, l # piece[y][x]が*だった場合はi,lを返す(その座標)
         return None, None
 
 #Piece 2 2: -> return [0][0], [0][1], [1][0], [1][1]
@@ -35,7 +34,6 @@ class Token():
 #Piece 2 2: -> return [0][0], [1][0]
 #*.
 #*.
-
 
 class Board():
     def __init__(self, y=None, x=None):
@@ -53,7 +51,6 @@ class Board():
 #001 .................
 #002 .................
 
-
 class Player():
 
     def __init__(self, p, board, token):
@@ -62,7 +59,7 @@ class Player():
         self.enemy_char = 'x' if self.char == 'o' else 'o' #敵は,xまたはo
         self.board = board  #Boardクラス
         self.token = token  #Tokenクラス
-
+        self.best = 100000000 #敵との距離の最適を入れる
 
     def check_overlap(self, x, y):
         token = self.token
@@ -77,7 +74,7 @@ class Player():
                 if token.piece[token_y][token_x] == '*' and \
                     self.board.board[y + token_y][x + token_x] in \
                         (self.char, self.char.upper()): #自分の駒があるか
-                            overlap_counter += 1
+                            overlap_counter += 1        #一つでも隣接してれば置ける
 
         if overlap_counter != 1:
             return 1
@@ -90,35 +87,50 @@ class Player():
 
         if ((x + token.x) > board.x) or ((y + token.y) > board.y): #mapからはみ出るか
             return 1
-
         return 0
-
 
     def put_token(self, token_y, token_x):  #token_y token_x は*の位置
         board = self.board
+        save = []   #pieceを置ける座標
+        enemies = [] #敵の位置
 
         for board_y in range(board.y):
             for board_x in range(board.x):  #mapを上から全部見ていく
+                if board.board[board_y][board_x] is (self.enemy_char, self.enemy_char.upper()): #敵の位置を抑える
+                    enemies.append(board_y, board_x)
                 if board.board[board_y][board_x] in (self.char, self.char.upper()): #その座標に自分の駒がある場合
-                    x = board_x - token_x #コマの座標から、pieceの大きさを引く
-                    y = board_y - token_y #座標から*の位置を引く
+                    x = board_x - token_x #コマの座標から、*の位置を引く
+                    y = board_y - token_y
                     if x < 0 or y < 0:
                         continue
-                    if self.check_overflow(x, y) == 0 and \
-                        self.check_overlap(x, y) == 0:
-                        print(f"{y} {x}") # <got(X or O) [y, x] そのpieceの始まりの座標
-                        return True #置けたらtrue
+                    if self.check_overflow(x, y) == 0 and self.check_overlap(x, y) == 0:
+                        save.append([y,x])
+#                        print(f"{y} {x}") # <got(X or O) [y, x] そのpieceの始まりの座標
+#                        return True #置けたらtrue
 
-        return False
+        if len(save) == 0: #saveに要素ない場合
+            return False
+        ans = self.choose_the_closest_enemy(save, enemies, x, y)
+        print(ans)
+        return True
+
+    def choose_the_closest_enemy(self, save:list, enemies: list, x, y): #|x_1 - x_2| + |y_1 - y_2|この距離が最短のものを出す
+        closest = []
+        for enemy_y, enemy_x in enemies:
+            for save_y, save_x in save:
+                distane = abs(save_x - enemy_x) + abs(save_y - enemy_y)
+                if distance < score.best:
+                    closest = [save_x, save_y]
+        return closest
 
     def put_random(self):
         for token_y, token_x in self.token.get_topleft_edge():
             if self.put_token(token_y, token_x): return True #置けた場合はtrueを返す
-
         print("0 0")  #置けなかった
         return False
-
-#<got (X or O): [0, 0]が出た時点での総数で結果が出る
+#Piece 2 2: -> return [0][0], [0][1], [1][0], [1][1] この場合4回put_tokenする
+#**
+#**
 
 def main():
     _, _, p, _, _ = input().split(' ')  #$$$ exec p1 : [ryaoi_filler]
@@ -135,4 +147,4 @@ def main():
 if __name__ == "__main__":
     main()
 
-#置けるとこをlistでもっといて,最も敵に近い位置に置く
+#置けるとこをlistで保持して,最も敵に近い位置に置くようにする
