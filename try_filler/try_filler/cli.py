@@ -223,16 +223,38 @@ class Player():
                     return True
         # 後攻パターン
         else:
-            if self.board.board[50][50] == '.':
-                if self.char == 'x':
-                    for token_y, token_x in self.token.get_topleft_edge():
-                        if self.put_token_bottomright(token_y, token_x):
-                            return True
-                else:
-                    for token_y, token_x in self.token.get_bottomright_edge():
-                        if self.put_token_topleft(token_y, token_x):
-                            return True
-        self.count += 1
+            if (self.goal_x_right or self.goal_y_bottom) and not(self.goal_x_left or self.goal_y_top):
+                for token_y, token_x in self.token.get_topleft_edge():
+                    if self.put_token_leftbottom(token_y, token_x):
+                        for board_y in range(self.board.y):
+                            if self.board.board[board_y][self.board.x - 1].upper() == self.char.upper():
+                                self.goal_x_right = True
+                        for board_x in range(self.board.x):
+                            if self.board.board[self.board.y - 1][board_x].upper() == self.char.upper():
+                                self.goal_y_bottom = True
+                        return True
+            elif not(self.goal_x_left or self.goal_y_top):
+                for token_y, token_x in self.token.get_topleft_edge():
+                    if self.put_token_rightbottom(token_y, token_x):
+                        for board_y in range(self.board.y):
+                            if self.board.board[board_y][0].upper() == self.char.upper():
+                                self.goal_x_left = True
+                        for board_x in range(self.board.x):
+                            if self.board.board[0][board_x].upper() == self.char.upper():
+                                self.goal_y_top = True
+                        return True
+                for token_y, token_x in self.token.get_rightbottom_edge():
+                    if self.put_token_lefttop(token_y, token_x):
+                        for board_y in range(self.board.y):
+                            if self.board.board[board_y][0].upper() == self.char.upper():
+                                self.goal_x_left = True
+                        for board_x in range(self.board.x):
+                            if self.board.board[0][board_x].upper() == self.char.upper():
+                                self.goal_y_top = True
+                        return True
+            for token_y, token_x in self.token.get_topleft_edge():
+                if self.put_token_bottomright(token_y, token_x):
+                    return True
         if self.count % 4 == 1:
             for token_y, token_x in self.token.get_topleft_edge():
                 if self.put_token_topright(token_y, token_x):
