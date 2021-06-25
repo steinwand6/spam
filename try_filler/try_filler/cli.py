@@ -255,28 +255,9 @@ class Player():
             for token_y, token_x in self.token.get_topleft_edge():
                 if self.put_token_bottomright(token_y, token_x):
                     return True
-        if self.count % 4 == 1:
-            for token_y, token_x in self.token.get_topleft_edge():
+            for token_y, token_x in self.token.get_bottomright_edge():
                 if self.put_token_topright(token_y, token_x):
                     return True
-        elif self.count % 4 == 2:
-            for token_y, token_x in self.token.get_topleft_edge():
-                if self.put_token_bottomright(token_y, token_x):
-                    return True
-        elif self.count % 4 == 3:
-            for token_y, token_x in self.token.get_bottomright_edge():
-                if self.put_token_bottomleft(token_y, token_x):
-                    return True
-        else:
-            for token_y, token_x in self.token.get_bottomright_edge():
-                if self.put_token_topleft(token_y, token_x):
-                    return True
-        for token_y, token_x in self.token.get_topleft_edge():
-            if self.put_token_bottomright(token_y, token_x):
-                return True
-        for token_y, token_x in self.token.get_bottomright_edge():
-            if self.put_token_topleft(token_y, token_x):
-                return True
 
         print("0 0")
         self.cont = False
