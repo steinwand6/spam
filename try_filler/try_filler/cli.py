@@ -18,6 +18,26 @@ class Token():
                     yield i, l
         return None, None
 
+    def get_lefttop_edge(self):
+        for l in range(self.x):
+            for i in range(self.y):
+                if self.shape[i][l] == '*':
+                    yield i, l
+        return None, None
+
+    def get_topright_edge(self):
+        for i in range(self.y):
+            for l in range(self.x)[::-1]:
+                if self.shape[i][l] == '*':
+                    yield i, l
+        return None, None
+
+    def get_bottomleft_edge(self):
+        for i in range(self.y)[::-1]:
+            for l in range(self.x):
+                if self.shape[i][l] == '*': yield i, l
+        return None, None
+
     def get_bottomright_edge(self):
         for i in range(self.y)[::-1]:
             for l in range(self.x)[::-1]:
@@ -223,31 +243,31 @@ class Player():
                     return True
         # 後攻パターン
         else:
-            if (self.goal_x_right or self.goal_y_bottom) and not(self.goal_x_left or self.goal_y_top):
-                for token_y, token_x in self.token.get_topleft_edge():
+            if (self.goal_x_left or self.goal_y_bottom) and not(self.goal_x_right or self.goal_y_top):
+                for token_y, token_x in self.token.get_topright_edge():
                     if self.put_token_leftbottom(token_y, token_x):
                         for board_y in range(self.board.y):
                             if self.board.board[board_y][self.board.x - 1].upper() == self.char.upper():
-                                self.goal_x_right = True
+                                self.goal_x_left = True
                         for board_x in range(self.board.x):
                             if self.board.board[self.board.y - 1][board_x].upper() == self.char.upper():
                                 self.goal_y_bottom = True
                         return True
-            elif not(self.goal_x_left or self.goal_y_top):
-                for token_y, token_x in self.token.get_topleft_edge():
-                    if self.put_token_rightbottom(token_y, token_x):
+            elif not(self.goal_x_right or self.goal_y_top):
+                for token_y, token_x in self.token.get_bottomleft_edge():
+                    if self.put_token_topright(token_y, token_x):
                         for board_y in range(self.board.y):
-                            if self.board.board[board_y][0].upper() == self.char.upper():
-                                self.goal_x_left = True
+                            if self.board.board[board_y][self.board.x - 1].upper() == self.char.upper():
+                                self.goal_x_right = True
                         for board_x in range(self.board.x):
                             if self.board.board[0][board_x].upper() == self.char.upper():
                                 self.goal_y_top = True
                         return True
-                for token_y, token_x in self.token.get_rightbottom_edge():
-                    if self.put_token_lefttop(token_y, token_x):
+                for token_y, token_x in self.token.get_topleft_edge():
+                    if self.put_token_topright(token_y, token_x):
                         for board_y in range(self.board.y):
-                            if self.board.board[board_y][0].upper() == self.char.upper():
-                                self.goal_x_left = True
+                            if self.board.board[board_y][self.board.x - 1].upper() == self.char.upper():
+                                self.goal_x_right = True
                         for board_x in range(self.board.x):
                             if self.board.board[0][board_x].upper() == self.char.upper():
                                 self.goal_y_top = True
@@ -267,10 +287,21 @@ def main():
     _, _, p, _, _ = input().split(' ')
 
     p = Player(p, Board(), Token())
+    prev = 0
     while p.cont:
+        count_enemy_token = 0
+        count_my_token = 0
         p.board.read_board()
         p.token.read_token()
-        p.put_random()
+        for i in range(p.board.y):
+            count_enemy_token += p.board.board[i].count(p.enemy_char) + p.board.board[i].count(p.enemy_char.upper())
+            count_my_token += p.board.board[i].count(p.char) + p.board.board[i].count(p.char.upper())
+        if count_enemy_token == prev and count_my_token > count_enemy_token:
+            p.cont = False
+            print(0, 0)
+        else:
+            p.put_random()
+        prev = count_enemy_token
 
 
 if __name__ == "__main__":
